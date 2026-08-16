@@ -1,0 +1,66 @@
+/*
+  Design direction (see plan in chat for the full rationale):
+  - Dark, low-glare surface by default — this is used standing at a rack,
+    often in low gym lighting, so it defaults to dark rather than a bright
+    white "admin dashboard" background.
+  - Every recorded number (weights, durations, PRs) renders in a tabular
+    monospace face — a scoreboard/stopwatch readout — so stats always read
+    as data, distinct from body copy. That's the app's signature element.
+  - Amber is reserved exclusively for personal-record moments so it stays
+    meaningful instead of becoming another generic accent color.
+*/
+
+:root {
+  color-scheme: dark;
+
+  --font-display: 'Space Grotesk', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+
+  --color-bg: #15171d;
+  --color-surface: #1e212b;
+  --color-surface-raised: #262a38;
+  --color-border: #2e3242;
+  --color-text: #f5f6f8;
+  --color-text-secondary: #8a8f9c;
+
+  --color-accent: #3654f2;
+  --color-accent-text: #ffffff;
+  --color-pr: #f2a93b;
+  --color-positive: #35c97a;
+  --color-negative: #e5484d;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  --nav-height: 64px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+
+  --color-bg: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-border: #e2e4ea;
+  --color-text: #15171d;
+  --color-text-secondary: #5b606e;
+
+  --color-accent: #3654f2;
+  --color-accent-text: #ffffff;
+  --color-pr: #b9740a;
+  --color-positive: #1f9d5c;
+  --color-negative: #d6383f;
+}

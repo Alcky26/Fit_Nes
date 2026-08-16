@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#15171D" />
+    <meta name="description" content="A private, offline-first fitness tracker. Your workout data stays on your device." />
+    <title>Fitness Tracker</title>
+
+    <link rel="icon" href="%BASE_URL%favicon.ico" />
+    <link rel="apple-touch-icon" href="%BASE_URL%icons/apple-touch-icon.png" />
+
+    <!--
+      Progressive enhancement: the CSS variables in src/styles/theme.css
+      already fall back to solid system-font stacks, so the app is fully
+      usable if this request is blocked, slow, or offline before it's
+      ever been cached. Once it has loaded successfully at least once,
+      the service worker's runtime cache (see vite.config.ts) keeps it
+      available offline after that — these aren't self-hosted/precached,
+      since fetching the actual font files isn't possible from this
+      sandbox's build environment.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- The manifest <link> and service worker registration are handled
+         by vite-plugin-pwa (see vite.config.ts) and src/pwa/, not by
+         hand-authored tags here. -->
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
