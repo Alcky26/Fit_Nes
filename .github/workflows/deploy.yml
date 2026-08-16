@@ -25,10 +25,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+          # No `cache: npm` yet — that needs a committed package-lock.json
+          # to key the cache off, which doesn't exist until someone runs
+          # `npm install` locally at least once (see README). Re-add it
+          # once one is committed, and switch the install step below back
+          # to `npm ci` for faster, fully reproducible installs.
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run tests
         run: npm test

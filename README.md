@@ -21,6 +21,13 @@ npm install
 npm run dev
 ```
 
+`npm install` generates `package-lock.json` on first run — commit that file.
+The CI workflow currently uses `npm install` (not `npm ci`) and doesn't
+cache dependencies, specifically because no lockfile was committed yet.
+Once one is, switch `.github/workflows/deploy.yml`'s install step back to
+`npm ci` and re-add `cache: npm` to `actions/setup-node@v4` for faster,
+fully reproducible CI installs.
+
 ## Build
 
 ```bash
