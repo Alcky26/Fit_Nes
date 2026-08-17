@@ -1,19 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { DB_NAME, resetDBConnection } from '../db'
 import { entryRepository } from '../repositories/entryRepository'
 import { exerciseRepository } from '../repositories/exerciseRepository'
 import { sessionRepository } from '../repositories/sessionRepository'
+import { resetDatabase } from '../test/resetDatabase'
 import { buildHistoryCsv } from './exportCsv'
-
-async function resetDatabase() {
-  resetDBConnection()
-  await new Promise<void>((resolve, reject) => {
-    const req = indexedDB.deleteDatabase(DB_NAME)
-    req.onsuccess = () => resolve()
-    req.onerror = () => reject(req.error)
-    req.onblocked = () => resolve()
-  })
-}
 
 beforeEach(async () => {
   await resetDatabase()

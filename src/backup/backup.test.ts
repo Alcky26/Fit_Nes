@@ -1,21 +1,25 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { DB_NAME, resetDBConnection } from '../db'
 import { entryRepository } from '../repositories/entryRepository'
 import { exerciseRepository } from '../repositories/exerciseRepository'
 import { photoRepository } from '../repositories/photoRepository'
 import { sessionRepository } from '../repositories/sessionRepository'
 import { settingsRepository } from '../repositories/settingsRepository'
+import { resetDatabase } from '../test/resetDatabase'
 import { buildBackup } from './exportBackup'
 import { importBackup } from './importBackup'
 import { validateBackup } from './validateBackup'
 
-async function resetDatabase() {
-  resetDBConnection()
-  await new Promise<void>((resolve, reject) => {
-    const req = indexedDB.deleteDatabase(DB_NAME)
-    req.onsuccess = () => resolve()
-    req.onerror = () => reject(req.error)
-    req.onblocked = () => resolve()
+/** FileReader.readAsText rather than blob.text() — a Blob read back out
+ *  of IndexedDB doesn't reliably expose the newer text()/arrayBuffer()
+ *  methods in every environment (see exportBackup.ts's blobToBase64 for
+ *  the same issue on the app side), while FileReader is the older, more
+ *  universally-supported way to read one. */
+function readBlobText(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result))
+    reader.onerror = () => reject(reader.error ?? new Error('Failed to read blob'))
+    reader.readAsText(blob)
   })
 }
 
@@ -78,7 +82,7 @@ describe('backup export/import round trip', () => {
 
     const restoredPhoto = await photoRepository.get(photo.id)
     expect(restoredPhoto?.mimeType).toBe('image/webp')
-    expect(await restoredPhoto?.blob.text()).toBe('fake-image-bytes')
+    expect(restoredPhoto ? await readBlobText(restoredPhoto.blob) : null).toBe('fake-image-bytes')
 
     const restoredSettings = await settingsRepository.get()
     expect(restoredSettings.theme).toBe('dark')
