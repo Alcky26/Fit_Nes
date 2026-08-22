@@ -44,8 +44,9 @@ npm test
 18 test files covering repositories (including the delete+undo/trash flow),
 the analytics engine (daily/weekly/monthly/yearly, personal records,
 exercise progress, calendar/period date math — with explicit leap-year and
-timezone-safety cases), backup export/import (including a full round-trip
-through a photo Blob), CSV export, form components, and the app shell.
+timezone-safety cases), backup export/import (encode/decode round-trip,
+merge semantics, and resilience to a single photo failing to encode),
+CSV export, form components, and the app shell.
 
 ## Development phases
 
