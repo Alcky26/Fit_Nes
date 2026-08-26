@@ -9,15 +9,29 @@ import { blobToBase64, buildBackup } from './exportBackup'
 import { base64ToBlob, importBackup } from './importBackup'
 import { validateBackup } from './validateBackup'
 
+/** FileReader.readAsText rather than blob.text() — this project's jsdom
+ *  version doesn't implement Blob.prototype.arrayBuffer() at all (confirmed
+ *  on a freshly-constructed Blob, not just one from IndexedDB), and .text()
+ *  is a similarly-modern method that could be missing for the same reason.
+ *  FileReader is the older, more universally-implemented way to read one. */
+function readBlobText(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result))
+    reader.onerror = () => reject(reader.error ?? new Error('Failed to read blob'))
+    reader.readAsText(blob)
+  })
+}
+
 beforeEach(async () => {
   await resetDatabase()
 })
 
 describe('blobToBase64 + base64ToBlob', () => {
-  // Exercised directly against a freshly-constructed Blob rather than one
-  // fetched back out of IndexedDB — see the comment on blobToBase64 in
-  // exportBackup.ts for why a round-tripped Blob is a jsdom+fake-indexeddb
-  // test-tooling limitation, not something to route around here.
+  // Exercised directly against a freshly-constructed Blob. Note this
+  // doesn't fully sidestep the environment gap — arrayBuffer() is
+  // missing here too — which is exactly why blobToBase64 itself falls
+  // back to FileReader; this test exercises that fallback path.
   it('round-trips arbitrary bytes through base64 encoding and decoding losslessly', async () => {
     const original = new Blob(['fake-image-bytes'], { type: 'image/webp' })
 
@@ -26,7 +40,7 @@ describe('blobToBase64 + base64ToBlob', () => {
 
     expect(decoded.type).toBe('image/webp')
     expect(decoded.size).toBe(original.size)
-    expect(await decoded.text()).toBe('fake-image-bytes')
+    expect(await readBlobText(decoded)).toBe('fake-image-bytes')
   })
 })
 

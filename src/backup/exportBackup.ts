@@ -2,22 +2,47 @@ import { entryRepository, exerciseRepository, photoRepository, sessionRepository
 import type { BackupData, BackupPhotoRecord } from './types'
 
 /**
- * Converts a Blob to a base64 string for the JSON backup. Chunked to
- * avoid a "Maximum call stack size exceeded" error from spreading a very
- * large byte array into String.fromCharCode at once.
+ * Converts a Blob to a base64 string for the JSON backup.
  *
- * Uses Blob.arrayBuffer() directly — every real browser's Blob supports
- * it consistently, including one read back out of IndexedDB (a single
- * native Blob implementation, no cross-realm concerns). The one
- * environment where this doesn't hold is the jsdom + fake-indexeddb test
- * combination, where a Blob reconstructed by fake-indexeddb's storage
- * emulation isn't recognized as jsdom's own Blob class by either
- * arrayBuffer() or FileReader — a test-tooling limitation, not a real
- * browser behavior, so buildBackup() below tolerates it per-photo rather
- * than this function trying to work around it.
+ * Prefers Blob.arrayBuffer() — every real browser's Blob supports it, and
+ * it's the simplest path there. Falls back to FileReader.readAsArrayBuffer
+ * (the older, more universally-implemented way to read a Blob's bytes)
+ * when arrayBuffer() isn't available at all, which is the case for this
+ * project's jsdom test environment — confirmed on a freshly-constructed
+ * Blob, not just one read back out of (fake-)IndexedDB, so this is a
+ * jsdom completeness gap rather than anything specific to IndexedDB
+ * round-tripping. A Blob reconstructed by fake-indexeddb's storage
+ * emulation can still fail both paths (it isn't recognized as jsdom's
+ * own Blob class by FileReader either) — buildBackup() below tolerates
+ * that per-photo rather than this function trying to work around it.
  */
 export async function blobToBase64(blob: Blob): Promise<string> {
-  const buffer = await blob.arrayBuffer()
+  if (typeof blob.arrayBuffer === 'function') {
+    try {
+      return encodeArrayBuffer(await blob.arrayBuffer())
+    } catch {
+      // Fall through to the FileReader path below.
+    }
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result
+      if (!(result instanceof ArrayBuffer)) {
+        reject(new Error('Unexpected FileReader result type'))
+        return
+      }
+      resolve(encodeArrayBuffer(result))
+    }
+    reader.onerror = () => reject(reader.error ?? new Error('Failed to read photo blob'))
+    reader.readAsArrayBuffer(blob)
+  })
+}
+
+/** Chunked to avoid a "Maximum call stack size exceeded" error from
+ *  spreading a very large byte array into String.fromCharCode at once. */
+function encodeArrayBuffer(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer)
   let binary = ''
   const chunkSize = 0x8000
