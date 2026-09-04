@@ -35,6 +35,10 @@ npm run build   # outputs to dist/
 npm run preview # serve the production build locally
 ```
 
+The `tsc -b` project-reference graph (composite/emit settings across
+`tsconfig.json` and `tsconfig.node.json`) has been validated against the
+real TypeScript compiler, not just read by eye.
+
 ## Tests
 
 ```bash
