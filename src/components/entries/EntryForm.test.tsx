@@ -49,7 +49,7 @@ describe('EntryForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save Entry' }))
 
     expect(onSubmit).toHaveBeenCalledTimes(1)
-    const values = onSubmit.mock.calls[0][0]
+    const values = onSubmit.mock.calls[0]![0]
     expect(values.sets).toEqual([
       { setNumber: 1, values: { reps: 12, weight: 30 } },
       { setNumber: 2, values: { reps: 10, weight: 35 } },
@@ -79,7 +79,7 @@ describe('EntryForm', () => {
     fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '10' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save Entry' }))
 
-    const values = onSubmit.mock.calls[0][0]
+    const values = onSubmit.mock.calls[0]![0]
     expect(values.sets).toEqual([{ setNumber: 1, values: { duration: 10 } }])
   })
 
@@ -97,6 +97,6 @@ describe('EntryForm', () => {
     fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '5' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save Entry' }))
 
-    expect(onSubmit.mock.calls[0][0].date).toBe('2026-08-01')
+    expect(onSubmit.mock.calls[0]![0].date).toBe('2026-08-01')
   })
 })

@@ -15,7 +15,7 @@ describe('ExerciseForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add Exercise' }))
 
     expect(onSubmit).toHaveBeenCalledTimes(1)
-    const values = onSubmit.mock.calls[0][0]
+    const values = onSubmit.mock.calls[0]![0]
     expect(values.name).toBe('Treadmill')
     expect(values.statDefs.map((d: { label: string }) => d.label).sort()).toEqual(['Duration', 'Incline', 'Speed'])
     expect(values.photo).toEqual({ kind: 'none' })

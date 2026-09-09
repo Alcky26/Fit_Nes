@@ -6,7 +6,7 @@ const isString: Check = (v) => typeof v === 'string'
 const isNumber: Check = (v) => typeof v === 'number' && Number.isFinite(v)
 const isBoolean: Check = (v) => typeof v === 'boolean'
 const isStringOrNull: Check = (v) => v === null || typeof v === 'string'
-const isArray: Check = (v) => Array.isArray(v)
+const isArray = (v: unknown): v is unknown[] => Array.isArray(v)
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 
 function checkFields(obj: Record<string, unknown>, fields: Record<string, Check>, path: string, errors: string[]): void {
