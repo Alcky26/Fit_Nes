@@ -6,10 +6,8 @@ import { useExercises } from '../hooks/useExercises'
 import { useRecentSessions } from '../hooks/useRecentSessions'
 import { formatDateLong, todayIso } from '../utils/dates'
 
-// Daily/weekly/monthly/yearly stats, personal records, and comparisons
-// with previous sessions arrive in Phase 6/7 once the full analytics
-// engine and PR system exist. Today's totals below are real, computed
-// straight from today's entries — nothing here is a placeholder.
+// Today's totals below are computed straight from today's entries via
+// the analytics engine — nothing here is a placeholder.
 export function HomePage() {
   const { exercises, loading } = useExercises()
   const { sessions, loading: sessionsLoading } = useRecentSessions()
@@ -112,7 +110,7 @@ export function HomePage() {
             {sessionsLoading ? (
               <p className="placeholder-note">Loading…</p>
             ) : sessions.length === 0 ? (
-              <p className="placeholder-note">No workouts logged yet. Personal records arrive in Phase 7.</p>
+              <p className="placeholder-note">No workouts logged yet.</p>
             ) : (
               <ul className="recent-workouts__list">
                 {sessions.map((session) => (

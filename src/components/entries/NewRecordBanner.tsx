@@ -22,10 +22,12 @@ export function NewRecordBanner({ exerciseName, records }: NewRecordBannerProps)
               {r.unit ?? ''}
             </span>{' '}
             <span>{r.label}</span>
+            <span className="pr-set-context"> (set: {r.best.setSummary})</span>
             {r.previousBest && (
               <span className="record-banner__previous">
                 Previous best: {r.previousBest.value}
                 {r.unit ?? ''}
+                {r.previousBest.setSummary && ` (set: ${r.previousBest.setSummary})`}
               </span>
             )}
           </li>

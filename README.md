@@ -4,9 +4,15 @@ A private, offline-first personal fitness tracker. 100% client-side — no
 backend, no account, no telemetry. All data lives in IndexedDB on your
 device; you control export/import.
 
-This README is a working stub for local development. The full README
-(features, data model, deployment, privacy) is written in Phase 13 once
-those features exist.
+## Updating from an older version
+
+Your data lives in IndexedDB under the site's origin, so deploying a new
+version to the same GitHub Pages URL keeps it. New features only add
+*optional* fields (for example an exercise's target reps and rest time);
+the database version is unchanged and no migration runs. Exercises, sets
+and entries saved by an older version load exactly as before, and old JSON
+backups still import. As a precaution, export a JSON backup from Settings
+before deploying any update.
 
 ## Stack
 

@@ -31,6 +31,14 @@ export interface Exercise {
    * readable — see requirement in section 7 of the brief.
    */
   archived: boolean
+  /**
+   * Optional personal targets. They were added after the first release, so
+   * records saved by older versions simply don't have them: always read
+   * with `?? null`. Free text so ranges like "8-12" work.
+   */
+  targetReps?: string | null
+  /** Suggested rest after each set, in seconds. Absent/null = not set. */
+  restSeconds?: number | null
   createdAt: number
   updatedAt: number
 }

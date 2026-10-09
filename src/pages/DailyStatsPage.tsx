@@ -134,11 +134,6 @@ export function DailyStatsPage() {
             <h2>Personal Records</h2>
             <RecordsAchievedList groups={recordGroups} />
           </section>
-
-          <p className="field__hint">
-            Flexible progress comparisons against previous sessions arrive with the exercise progress page (Phase
-            8).
-          </p>
         </>
       )}
     </div>

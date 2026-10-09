@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { PersonalRecordsSummary } from '../components/exercises/PersonalRecordsSummary'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { computeExerciseRecords, type ExerciseRecords } from '../analytics/personalRecords'
 import { ConfirmDialog } from '../components/common/ConfirmDialog'
@@ -76,6 +77,8 @@ export function ExerciseFormPage() {
           description: values.description,
           usesSets: values.usesSets,
           statDefs: values.statDefs,
+          targetReps: values.targetReps,
+          restSeconds: values.restSeconds,
           photoId,
         })
       } else {
@@ -85,6 +88,8 @@ export function ExerciseFormPage() {
           description: values.description,
           usesSets: values.usesSets,
           statDefs: values.statDefs,
+          targetReps: values.targetReps,
+          restSeconds: values.restSeconds,
           photoId,
         })
       }
@@ -146,26 +151,7 @@ export function ExerciseFormPage() {
       {exercise && records && (records.statRecords.length > 0 || records.volumeRecord) && (
         <section className="exercise-frequency">
           <h2>Personal Records</h2>
-          <ul className="records-achieved-list__stats">
-            {records.statRecords.map((r) => (
-              <li key={r.statId}>
-                {r.label}:{' '}
-                <span className="stat-figure">
-                  {r.best.value}
-                  {r.unit ?? ''}
-                </span>
-              </li>
-            ))}
-            {records.volumeRecord && (
-              <li key="volume">
-                {records.volumeRecord.label}:{' '}
-                <span className="stat-figure">
-                  {records.volumeRecord.best.value}
-                  {records.volumeRecord.unit ?? ''}
-                </span>
-              </li>
-            )}
-          </ul>
+          <PersonalRecordsSummary records={records} />
         </section>
       )}
 

@@ -15,6 +15,13 @@ function checkFields(obj: Record<string, unknown>, fields: Record<string, Check>
   }
 }
 
+function checkOptionalFields(obj: Record<string, unknown>, fields: Record<string, Check>, path: string, errors: string[]): void {
+  for (const [key, check] of Object.entries(fields)) {
+    const value = obj[key]
+    if (value !== undefined && !check(value)) errors.push(`${path}.${key}: invalid`)
+  }
+}
+
 const EXERCISE_FIELDS: Record<string, Check> = {
   id: isString,
   name: isString,
@@ -26,6 +33,13 @@ const EXERCISE_FIELDS: Record<string, Check> = {
   archived: isBoolean,
   createdAt: isNumber,
   updatedAt: isNumber,
+}
+
+/** Fields added after v1 shipped. Old backups lack them, so they are only
+ *  checked when present (null/undefined = not set). */
+const EXERCISE_OPTIONAL_FIELDS: Record<string, Check> = {
+  targetReps: isStringOrNull,
+  restSeconds: (v) => v === null || isNumber(v),
 }
 
 const SESSION_FIELDS: Record<string, Check> = {
@@ -75,7 +89,13 @@ export interface ValidationResult {
   data: BackupData | null
 }
 
-function validateArray(input: Record<string, unknown>, key: string, fields: Record<string, Check>, errors: string[]): unknown[] | null {
+function validateArray(
+  input: Record<string, unknown>,
+  key: string,
+  fields: Record<string, Check>,
+  errors: string[],
+  optionalFields: Record<string, Check> = {},
+): unknown[] | null {
   const value = input[key]
   if (!isArray(value)) {
     errors.push(`${key}: expected an array`)
@@ -87,6 +107,7 @@ function validateArray(input: Record<string, unknown>, key: string, fields: Reco
       return
     }
     checkFields(item, fields, `${key}[${i}]`, errors)
+    checkOptionalFields(item, optionalFields, `${key}[${i}]`, errors)
   })
   return value
 }
@@ -104,7 +125,7 @@ export function validateBackup(input: unknown): ValidationResult {
     errors.push('exportedAt: expected a string')
   }
 
-  const exercises = validateArray(input, 'exercises', EXERCISE_FIELDS, errors)
+  const exercises = validateArray(input, 'exercises', EXERCISE_FIELDS, errors, EXERCISE_OPTIONAL_FIELDS)
   const sessions = validateArray(input, 'workoutSessions', SESSION_FIELDS, errors)
   const entries = validateArray(input, 'workoutEntries', ENTRY_FIELDS, errors)
   const photos = validateArray(input, 'photos', PHOTO_FIELDS, errors)
