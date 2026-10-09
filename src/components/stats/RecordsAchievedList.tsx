@@ -24,6 +24,7 @@ export function RecordsAchievedList({ groups }: RecordsAchievedListProps) {
                   {r.best.value}
                   {r.unit ?? ''}
                 </span>
+                <span className="pr-set-context"> ({r.best.setSummary})</span>
               </li>
             ))}
           </ul>

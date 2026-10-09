@@ -40,4 +40,18 @@ describe('ExerciseForm', () => {
     render(<ExerciseForm submitLabel="Add Exercise" onSubmit={vi.fn()} />)
     expect(screen.getByRole('button', { name: 'Add Exercise' })).toBeDisabled()
   })
+
+  it('submits optional target reps and rest time, or null when left empty', () => {
+    const onSubmit = vi.fn()
+    render(<ExerciseForm submitLabel="Add Exercise" onSubmit={onSubmit} />)
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Chest Press' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Duration' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Add Exercise' }))
+    expect(onSubmit.mock.calls[0]![0]).toMatchObject({ targetReps: null, restSeconds: null })
+
+    fireEvent.change(screen.getByLabelText('Target reps (optional)'), { target: { value: ' 8-12 ' } })
+    fireEvent.change(screen.getByLabelText('Rest after each set, in seconds (optional)'), { target: { value: '90' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add Exercise' }))
+    expect(onSubmit.mock.calls[1]![0]).toMatchObject({ targetReps: '8-12', restSeconds: 90 })
+  })
 })

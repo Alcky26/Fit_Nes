@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { PersonalRecordsSummary } from '../components/exercises/PersonalRecordsSummary'
 import { Link, useParams } from 'react-router-dom'
 import {
   computeProgressComparison,
@@ -133,26 +134,7 @@ export function ExerciseProgressPage() {
           {records && (records.statRecords.length > 0 || records.volumeRecord) && (
             <section className="exercise-frequency">
               <h2>Personal Records</h2>
-              <ul className="records-achieved-list__stats">
-                {records.statRecords.map((r) => (
-                  <li key={r.statId}>
-                    {r.label}:{' '}
-                    <span className="stat-figure">
-                      {r.best.value}
-                      {r.unit ?? ''}
-                    </span>
-                  </li>
-                ))}
-                {records.volumeRecord && (
-                  <li key="volume">
-                    {records.volumeRecord.label}:{' '}
-                    <span className="stat-figure">
-                      {records.volumeRecord.best.value}
-                      {records.volumeRecord.unit ?? ''}
-                    </span>
-                  </li>
-                )}
-              </ul>
+              <PersonalRecordsSummary records={records} />
             </section>
           )}
 

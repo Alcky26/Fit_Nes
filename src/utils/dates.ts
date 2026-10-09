@@ -33,3 +33,11 @@ export function formatDateLong(isoDate: string): string {
     return isoDate
   }
 }
+
+/** True when `isoDate` is no more than `days` days before `todayIsoDate`
+ *  (and not in the future). Works on local calendar dates. */
+export function isWithinDays(isoDate: string, todayIsoDate: string, days: number): boolean {
+  const diffMs = parseIsoDate(todayIsoDate).getTime() - parseIsoDate(isoDate).getTime()
+  const diffDays = Math.round(diffMs / 86_400_000)
+  return diffDays >= 0 && diffDays <= days
+}

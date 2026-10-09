@@ -1098,6 +1098,11 @@ button {
   color: var(--color-pr);
 }
 
+.pr-set-context {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}
+
 /* Exercise progress page ------------------------------------------------- */
 
 .progress-link {
@@ -1365,4 +1370,32 @@ button {
 
 .error-boundary .btn {
   margin-top: var(--space-2);
+}
+
+/* Last-time reminder on the add-entry form --------------------------------- */
+
+.reference-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.reference-card h3 {
+  margin: 0 0 var(--space-1);
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.reference-card__targets {
+  margin: 0;
+  font-weight: 600;
+}
+
+.reference-card__note {
+  margin: 0;
+  white-space: pre-wrap;
 }

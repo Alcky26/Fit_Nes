@@ -73,8 +73,6 @@ export function PeriodStatsView({
         <h2>Most Trained</h2>
         <ExerciseFrequencyList frequency={current.exerciseFrequency} />
       </section>
-
-      <p className="field__hint">Flexible progress comparisons against previous sessions arrive with the exercise progress page (Phase 8).</p>
     </div>
   )
 }

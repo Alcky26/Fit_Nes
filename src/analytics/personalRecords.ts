@@ -1,5 +1,6 @@
 import { entryRepository } from '../repositories'
-import type { Exercise, StatDirection, WorkoutEntry } from '../types'
+import type { Exercise, StatDefinition, StatDirection, WorkoutEntry } from '../types'
+import { formatStatValues } from '../utils/format'
 import type { DateRange } from '../utils/periods'
 
 export interface RecordCandidate {
@@ -9,6 +10,9 @@ export interface RecordCandidate {
   createdAt: number
   setNumber: number
   value: number
+  /** The whole set this value came from (e.g. "29kg · 16"). Each stat's
+   *  record can come from a different set, so this gives context. */
+  setSummary: string
 }
 
 export interface StatRecord {
@@ -59,7 +63,7 @@ function computeRunningRecord(
   return { best, previousBest }
 }
 
-function candidatesForStat(entries: WorkoutEntry[], statId: string): RecordCandidate[] {
+function candidatesForStat(entries: WorkoutEntry[], statId: string, statDefs: StatDefinition[]): RecordCandidate[] {
   const candidates: RecordCandidate[] = []
   for (const entry of entries) {
     for (const set of entry.sets) {
@@ -72,6 +76,7 @@ function candidatesForStat(entries: WorkoutEntry[], statId: string): RecordCandi
           createdAt: entry.createdAt,
           setNumber: set.setNumber,
           value,
+          setSummary: formatStatValues(statDefs, set.values),
         })
       }
     }
@@ -97,6 +102,7 @@ function computeVolumeRecord(exercise: Exercise, entries: WorkoutEntry[]): StatR
           createdAt: entry.createdAt,
           setNumber: set.setNumber,
           value: weight * reps,
+          setSummary: formatStatValues(exercise.statDefs, set.values),
         })
       }
     }
@@ -118,7 +124,7 @@ export async function computeExerciseRecords(exercise: Exercise): Promise<Exerci
     if (def.direction === 'neutral') continue
     const direction = def.direction // narrowed: 'higherIsBetter' | 'lowerIsBetter'
 
-    const record = computeRunningRecord(candidatesForStat(entries, def.id), direction)
+    const record = computeRunningRecord(candidatesForStat(entries, def.id, exercise.statDefs), direction)
     if (record) {
       statRecords.push({ statId: def.id, label: def.label, unit: def.unit, direction, ...record })
     }

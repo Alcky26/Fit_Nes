@@ -14,6 +14,8 @@ export interface ExerciseFormValues {
   usesSets: boolean
   statDefs: StatDefinition[]
   photo: PhotoState
+  targetReps: string | null
+  restSeconds: number | null
 }
 
 interface ExerciseFormProps {
@@ -29,6 +31,10 @@ export function ExerciseForm({ initial, submitLabel, busy, onSubmit }: ExerciseF
   const [description, setDescription] = useState(initial?.description ?? '')
   const [usesSets, setUsesSets] = useState(initial?.usesSets ?? false)
   const [statDefs, setStatDefs] = useState<StatDefinition[]>(initial?.statDefs ?? [])
+  const [targetReps, setTargetReps] = useState(initial?.targetReps ?? '')
+  const [restSeconds, setRestSeconds] = useState(
+    initial?.restSeconds !== undefined && initial.restSeconds !== null ? String(initial.restSeconds) : '',
+  )
   const [photo, setPhoto] = useState<PhotoState>(
     initial?.photoId ? { kind: 'existing', photoId: initial.photoId } : { kind: 'none' },
   )
@@ -38,7 +44,17 @@ export function ExerciseForm({ initial, submitLabel, busy, onSubmit }: ExerciseF
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
     if (!canSubmit) return
-    onSubmit({ name: name.trim(), category, description: description.trim(), usesSets, statDefs, photo })
+    const parsedRest = restSeconds.trim() === '' ? NaN : Number(restSeconds)
+    onSubmit({
+      name: name.trim(),
+      category,
+      description: description.trim(),
+      usesSets,
+      statDefs,
+      photo,
+      targetReps: targetReps.trim() === '' ? null : targetReps.trim(),
+      restSeconds: Number.isFinite(parsedRest) && parsedRest > 0 ? Math.round(parsedRest) : null,
+    })
   }
 
   return (
@@ -65,6 +81,25 @@ export function ExerciseForm({ initial, submitLabel, busy, onSubmit }: ExerciseF
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         placeholder="Optional notes about form, machine settings, etc."
+      />
+
+      <TextField
+        label="Target reps (optional)"
+        value={targetReps}
+        onChange={(e) => setTargetReps(e.target.value)}
+        placeholder="e.g. 10 or 8-12"
+        hint="The reps you aim for on each set of this exercise."
+      />
+
+      <TextField
+        label="Rest after each set, in seconds (optional)"
+        type="number"
+        inputMode="numeric"
+        min={0}
+        step={5}
+        value={restSeconds}
+        onChange={(e) => setRestSeconds(e.target.value)}
+        placeholder="e.g. 90"
       />
 
       <PhotoField value={photo} onChange={setPhoto} />

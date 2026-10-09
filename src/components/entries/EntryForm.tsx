@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import type { Exercise, SetRecord } from '../../types'
+import { cloneSets } from '../../analytics/exerciseReference'
+import { useExerciseReference } from '../../hooks/useExerciseReference'
 import { todayIso } from '../../utils/dates'
 import { TextArea } from '../common/TextArea'
+import { ExerciseReferenceCard } from './ExerciseReferenceCard'
 import { SetEditor } from './SetEditor'
 
 export interface EntryFormValues {
@@ -29,6 +32,9 @@ export function EntryForm({ exercise, initial, fixedDate, submitLabel, busy, onS
   const [sets, setSets] = useState<SetRecord[]>(initial?.sets ?? [{ setNumber: 1, values: {} }])
   const [notes, setNotes] = useState(initial?.notes ?? '')
 
+  // Only when creating: the reminder is useless while editing an old entry.
+  const reference = useExerciseReference(initial ? null : exercise)
+
   const hasAnyValue = sets.some((set) => Object.keys(set.values).length > 0)
   const canSubmit = hasAnyValue && !busy
 
@@ -40,6 +46,14 @@ export function EntryForm({ exercise, initial, fixedDate, submitLabel, busy, onS
 
   return (
     <form className="entry-form" onSubmit={handleSubmit}>
+      {reference && (
+        <ExerciseReferenceCard
+          exercise={exercise}
+          reference={reference}
+          onUseLast={reference.lastEntry ? () => setSets(cloneSets(reference.lastEntry?.sets ?? [])) : undefined}
+        />
+      )}
+
       {fixedDate ? (
         <p className="field__hint">Logging for {fixedDate}</p>
       ) : (

@@ -223,3 +223,32 @@ describe('computeImprovementPercent', () => {
     expect(computeImprovementPercent(10, 0, 'higherIsBetter')).toBeNull()
   })
 })
+
+describe('set context for each record', () => {
+  it('shows which set each independent record came from', async () => {
+    const exercise = await createSeatedRow()
+    const session = await sessionRepository.create({ date: '2026-09-01', startTime: null, endTime: null, title: 'W', notes: '' })
+    await entryRepository.create({
+      sessionId: session.id,
+      exerciseId: exercise.id,
+      date: '2026-09-01',
+      notes: '',
+      sets: [
+        { setNumber: 1, values: { reps: 15, weight: 29 } },
+        { setNumber: 2, values: { reps: 16, weight: 29 } },
+        { setNumber: 3, values: { reps: 10, weight: 36 } },
+      ],
+    })
+
+    const records = await computeExerciseRecords(exercise)
+    const weight = records.statRecords.find((r) => r.statId === 'weight')
+    const reps = records.statRecords.find((r) => r.statId === 'reps')
+
+    expect(weight?.best.value).toBe(36)
+    expect(weight?.best.setSummary).toBe('10 · 36kg')
+    expect(reps?.best.value).toBe(16)
+    expect(reps?.best.setSummary).toBe('16 · 29kg')
+    expect(records.volumeRecord?.best.value).toBe(464)
+    expect(records.volumeRecord?.best.setSummary).toBe('16 · 29kg')
+  })
+})

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { usePhotoUrl } from '../../hooks/usePhotoUrl'
 import type { Exercise } from '../../types'
 import { categoryLabel } from '../../utils/categories'
+import { formatExerciseTargets } from '../../utils/format'
 
 interface ExerciseCardProps {
   exercise: Exercise
@@ -10,6 +11,7 @@ interface ExerciseCardProps {
 
 export function ExerciseCard({ exercise, to }: ExerciseCardProps) {
   const photoUrl = usePhotoUrl(exercise.photoId)
+  const targets = formatExerciseTargets(exercise)
 
   return (
     <Link to={to} className="exercise-card">
@@ -26,6 +28,7 @@ export function ExerciseCard({ exercise, to }: ExerciseCardProps) {
           {categoryLabel(exercise.category)}
           {exercise.archived ? ' · Archived' : ''}
         </p>
+        {targets && <p className="field__hint">{targets}</p>}
       </div>
     </Link>
   )
