@@ -1,6 +1,9 @@
+import { useMemo, useState } from 'react'
+import type { KeyboardEvent } from 'react'
 import { usePhotoUrl } from '../../hooks/usePhotoUrl'
 import type { Exercise } from '../../types'
 import { categoryLabel } from '../../utils/categories'
+import { searchExercises } from '../../utils/exerciseSearch'
 
 interface ExercisePickerProps {
   exercises: Exercise[]
@@ -8,14 +11,50 @@ interface ExercisePickerProps {
 }
 
 export function ExercisePicker({ exercises, onSelect }: ExercisePickerProps) {
+  const [query, setQuery] = useState('')
+  const results = useMemo(() => searchExercises(exercises, query), [exercises, query])
+  const searching = query.trim().length > 0
+
+  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    // Enter picks the best match, so you can type and confirm without
+    // touching the list.
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      const top = results[0]
+      if (top) onSelect(top)
+    }
+  }
+
   return (
-    <ul className="exercise-list">
-      {exercises.map((exercise) => (
-        <li key={exercise.id}>
-          <ExercisePickerRow exercise={exercise} onSelect={onSelect} />
-        </li>
-      ))}
-    </ul>
+    <div className="exercise-picker">
+      <div className="field">
+        <label htmlFor="exercise-search">Search exercises</label>
+        <input
+          id="exercise-search"
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="e.g. chest press"
+          autoComplete="off"
+          autoCapitalize="off"
+          spellCheck={false}
+        />
+        {searching && (
+          <p className="field__hint" role="status">
+            {results.length === 0 ? 'No exercises match your search.' : `${results.length} of ${exercises.length} exercises, best match first`}
+          </p>
+        )}
+      </div>
+
+      <ul className="exercise-list">
+        {results.map((exercise) => (
+          <li key={exercise.id}>
+            <ExercisePickerRow exercise={exercise} onSelect={onSelect} />
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
 
