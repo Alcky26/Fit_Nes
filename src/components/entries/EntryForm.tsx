@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { Exercise, SetRecord } from '../../types'
 import { cloneSets } from '../../analytics/exerciseReference'
@@ -22,18 +22,28 @@ interface EntryFormProps {
    *  changing a workout's date happens at the session level and cascades
    *  to its entries, see SessionDetailPage. */
   fixedDate?: string
+  /** Pre-fills the sets from the last entry as soon as it loads (used when
+   *  arriving from the workout notification). Still fully editable. */
+  autoFillFromLast?: boolean
   submitLabel: string
   busy?: boolean
   onSubmit: (values: EntryFormValues) => void | Promise<void>
 }
 
-export function EntryForm({ exercise, initial, fixedDate, submitLabel, busy, onSubmit }: EntryFormProps) {
+export function EntryForm({ exercise, initial, fixedDate, autoFillFromLast, submitLabel, busy, onSubmit }: EntryFormProps) {
   const [date, setDate] = useState(initial?.date ?? fixedDate ?? todayIso())
   const [sets, setSets] = useState<SetRecord[]>(initial?.sets ?? [{ setNumber: 1, values: {} }])
   const [notes, setNotes] = useState(initial?.notes ?? '')
 
   // Only when creating: the reminder is useless while editing an old entry.
   const reference = useExerciseReference(initial ? null : exercise)
+
+  const autoFilled = useRef(false)
+  useEffect(() => {
+    if (!autoFillFromLast || autoFilled.current || !reference?.lastEntry) return
+    autoFilled.current = true
+    setSets(cloneSets(reference.lastEntry.sets))
+  }, [autoFillFromLast, reference])
 
   const hasAnyValue = sets.some((set) => Object.keys(set.values).length > 0)
   const canSubmit = hasAnyValue && !busy

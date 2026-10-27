@@ -6,6 +6,7 @@ import { downloadHistoryCsv } from '../backup/exportCsv'
 import { importBackup, type ImportMode } from '../backup/importBackup'
 import { validateBackup, type BackupSummary } from '../backup/validateBackup'
 import { ConfirmDialog } from '../components/common/ConfirmDialog'
+import { WorkoutNotificationSetting } from '../components/settings/WorkoutNotificationSetting'
 import { useInstallPrompt } from '../pwa/useInstallPrompt'
 import { settingsRepository } from '../repositories'
 import { applyTheme } from '../state/theme'
@@ -218,6 +219,11 @@ export function SettingsPage() {
         <button type="button" className="btn" disabled={exportingCsv} onClick={handleExportCsv}>
           {exportingCsv ? 'Exporting…' : 'Export History (CSV)'}
         </button>
+      </section>
+
+      <section className="settings-section">
+        <h2>Workout Notification</h2>
+        <WorkoutNotificationSetting />
       </section>
 
       <section className="settings-section">

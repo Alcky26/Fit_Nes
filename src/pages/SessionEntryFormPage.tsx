@@ -5,6 +5,7 @@ import { EmptyState } from '../components/common/EmptyState'
 import { EntryForm, type EntryFormValues } from '../components/entries/EntryForm'
 import { ExercisePicker } from '../components/entries/ExercisePicker'
 import { useExercises } from '../hooks/useExercises'
+import { showWorkoutNotification } from '../pwa/workoutNotification'
 import { entryRepository, sessionRepository } from '../repositories'
 import type { Exercise, WorkoutEntry, WorkoutSession } from '../types'
 
@@ -42,6 +43,11 @@ export function SessionEntryFormPage() {
     }
   }, [existingEntry, exercises])
 
+  function handleSelect(exercise: Exercise) {
+    setSelected(exercise)
+    void showWorkoutNotification(exercise)
+  }
+
   async function handleSubmit(values: EntryFormValues) {
     if (!session || !selected) return
     setBusy(true)
@@ -58,6 +64,7 @@ export function SessionEntryFormPage() {
             })
           ).id
 
+      void showWorkoutNotification(selected)
       const records = await computeExerciseRecords(selected)
       const newRecords = recordsSetByEntry(records, savedEntryId)
 
@@ -97,7 +104,7 @@ export function SessionEntryFormPage() {
         active.length === 0 ? (
           <EmptyState title="No exercises yet" description="Add an exercise first from the Exercises tab." />
         ) : (
-          <ExercisePicker exercises={active} onSelect={setSelected} />
+          <ExercisePicker exercises={active} onSelect={handleSelect} />
         )
       ) : (
         <>

@@ -44,3 +44,9 @@ export async function loadExerciseReference(exercise: Exercise, today: string = 
   const records = await computeExerciseRecords(exercise)
   return { lastEntry: entries[0] ?? null, recentNote: findRecentNote(entries, today), records }
 }
+
+/** The last set of the most recent entry for an exercise, or null. */
+export async function loadLastSet(exerciseId: string): Promise<SetRecord | null> {
+  const [newest] = sortNewestFirst(await entryRepository.listByExercise(exerciseId))
+  return newest?.sets[newest.sets.length - 1] ?? null
+}

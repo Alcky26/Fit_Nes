@@ -1,10 +1,11 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { computeExerciseRecords, recordsSetByEntry } from '../analytics/personalRecords'
 import { EmptyState } from '../components/common/EmptyState'
 import { EntryForm, type EntryFormValues } from '../components/entries/EntryForm'
 import { ExercisePicker } from '../components/entries/ExercisePicker'
 import { useExercises } from '../hooks/useExercises'
+import { showWorkoutNotification } from '../pwa/workoutNotification'
 import { entryRepository, sessionRepository } from '../repositories'
 import type { Exercise } from '../types'
 
@@ -13,6 +14,28 @@ export function LogEntryPage() {
   const navigate = useNavigate()
   const [selected, setSelected] = useState<Exercise | null>(null)
   const [busy, setBusy] = useState(false)
+  const [searchParams] = useSearchParams()
+  const [autoFill, setAutoFill] = useState(false)
+  const handledParam = useRef<string | null>(null)
+
+  // Arriving from the workout notification: /log?exercise=<id> opens the
+  // form for that exercise, pre-filled with the last values.
+  const requestedId = searchParams.get('exercise')
+  useEffect(() => {
+    if (!requestedId || loading || handledParam.current === requestedId) return
+    const match = exercises.find((e) => e.id === requestedId && !e.archived)
+    handledParam.current = requestedId
+    if (match) {
+      setSelected(match)
+      setAutoFill(true)
+    }
+  }, [requestedId, loading, exercises])
+
+  function handleSelect(exercise: Exercise) {
+    setSelected(exercise)
+    setAutoFill(false)
+    void showWorkoutNotification(exercise)
+  }
 
   const active = exercises.filter((e) => !e.archived)
 
@@ -44,6 +67,7 @@ export function LogEntryPage() {
         notes: values.notes,
       })
 
+      void showWorkoutNotification(selected)
       const records = await computeExerciseRecords(selected)
       const newRecords = recordsSetByEntry(records, newEntry.id)
 
@@ -78,14 +102,14 @@ export function LogEntryPage() {
       </header>
 
       {!selected ? (
-        <ExercisePicker exercises={active} onSelect={setSelected} />
+        <ExercisePicker exercises={active} onSelect={handleSelect} />
       ) : (
         <>
           <button type="button" className="btn back-link" onClick={() => setSelected(null)}>
             <span aria-hidden="true">←</span> Change exercise
           </button>
           <h2>{selected.name}</h2>
-          <EntryForm exercise={selected} submitLabel="Save Entry" busy={busy} onSubmit={handleSubmit} />
+          <EntryForm exercise={selected} autoFillFromLast={autoFill} submitLabel="Save Entry" busy={busy} onSubmit={handleSubmit} />
         </>
       )}
     </div>

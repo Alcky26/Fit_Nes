@@ -108,6 +108,31 @@ test PWA/offline behavior against a production build, not the dev server.
    lets the same build work from any repo name/subpath without extra
    config.
 
+## Workout notification (Android / Chromium)
+
+Settings → *Workout Notification* turns on a notification for the exercise
+you are currently logging. It appears when you pick an exercise or save an
+entry and stays until you swipe it away. Its buttons work while the app is in
+the background:
+
+- **Repeat last set** saves the same set again right from the notification
+  (appended to today's entry, or a new entry in today's session) without
+  opening the app.
+- **Rest** starts the rest timer: the exercise's rest time (set in the
+  exercise form, 1 min 30 s if none). While it runs the buttons become
+  **Stop timer** and **+30 s**, and when it ends the phone plays its normal
+  notification sound and vibrates. The notification shows the time the rest
+  ends; a countdown can't tick inside a web notification. Timers are capped at
+  about 5 minutes per run (a browser limit for service workers).
+- Tapping the notification opens the Add Entry form for that exercise,
+  pre-filled with your last values.
+
+It is a local notification: nothing is sent to any server. Typing values
+inside the notification is not possible on the web, which is why the buttons
+repeat the previous set. The handlers live in `public/notification-sw.js`,
+loaded into the generated service worker, and only work in the production
+(installed) build.
+
 ## Privacy
 
 No analytics, ads, or tracking. No workout data ever leaves your device

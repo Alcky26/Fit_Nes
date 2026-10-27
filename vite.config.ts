@@ -38,6 +38,9 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Notification button handlers (public/notification-sw.js) run
+        // inside the generated service worker.
+        importScripts: ['notification-sw.js'],
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
         // HashRouter means every route is served from the same
         // precached index.html at the same path (only the #fragment

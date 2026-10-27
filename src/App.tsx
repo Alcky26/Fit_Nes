@@ -14,6 +14,7 @@ import { SessionEntryFormPage } from './pages/SessionEntryFormPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { WeeklyStatsPage } from './pages/WeeklyStatsPage'
 import { YearlyStatsPage } from './pages/YearlyStatsPage'
+import { NotificationBridge } from './pwa/NotificationBridge'
 import { trashRepository } from './repositories'
 import { ToastProvider } from './state/ToastContext'
 import { useSystemTheme } from './state/useSystemTheme'
@@ -30,6 +31,7 @@ export default function App() {
   return (
     <HashRouter>
       <ToastProvider>
+        <NotificationBridge />
         <AppShell>
           <Routes>
             <Route path="/" element={<HomePage />} />
