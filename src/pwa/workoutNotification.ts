@@ -109,3 +109,56 @@ export async function clearWorkoutNotification(): Promise<void> {
     // Nothing to clear.
   }
 }
+
+export interface NotificationStatus {
+  supported: boolean
+  permission: NotificationPermission | 'unsupported'
+  /** Whether a service worker is registered (only in the built app). */
+  serviceWorker: boolean
+  enabled: boolean
+}
+
+/** What the Settings screen shows so a missing notification can be
+ *  traced to its cause instead of guessed at. */
+export async function getNotificationStatus(): Promise<NotificationStatus> {
+  if (!isNotificationSupported()) {
+    return { supported: false, permission: 'unsupported', serviceWorker: false, enabled: false }
+  }
+  let serviceWorker = false
+  try {
+    serviceWorker = Boolean(await getRegistration())
+  } catch {
+    serviceWorker = false
+  }
+  return { supported: true, permission: Notification.permission, serviceWorker, enabled: isWorkoutNotificationEnabled() }
+}
+
+/** Shows a sample notification with the real buttons. Returns null on
+ *  success or a message explaining what is missing. */
+export async function sendTestNotification(): Promise<string | null> {
+  if (!isNotificationSupported()) return "This browser doesn't support notifications."
+  if (Notification.permission !== 'granted') return 'Notifications are not allowed for this app yet.'
+  try {
+    const registration = await getRegistration()
+    if (!registration) {
+      return 'No service worker is running. Notifications only work in the installed/published app, not in development.'
+    }
+    const body = 'If you can see this, notifications work.'
+    const options: WorkoutNotificationOptions = {
+      body,
+      tag: NOTIFICATION_TAG,
+      renotify: true,
+      icon: 'icons/icon-192.png',
+      badge: 'icons/icon-192.png',
+      actions: [
+        { action: 'repeat', title: 'Repeat last set' },
+        { action: 'timer', title: `Rest ${formatRestSeconds(DEFAULT_REST_SECONDS)}` },
+      ],
+      data: { kind: 'workout', exerciseId: '__test__', exerciseName: 'Test notification', restSeconds: DEFAULT_REST_SECONDS, body },
+    }
+    await registration.showNotification('Test notification', options)
+    return null
+  } catch (error) {
+    return `The browser refused to show it: ${error instanceof Error ? error.message : String(error)}`
+  }
+}

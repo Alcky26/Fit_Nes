@@ -14,6 +14,9 @@
 
 var FT_DB_NAME = 'fitness-tracker'
 var FT_NOTIFICATION_TAG = 'workout-current'
+var FT_DONE_TAG = 'workout-timer-done'
+// How long the "rest over" alert stays before it is cleared automatically.
+var FT_DONE_VISIBLE_MS = 15 * 1000
 // Used when an exercise has no rest time set. Keep in sync with
 // DEFAULT_REST_SECONDS in src/pwa/workoutNotification.ts.
 var FT_DEFAULT_REST_SECONDS = 90
@@ -80,7 +83,7 @@ function ftNewestFirst(entries) {
  *  - if there is already an entry today, the set is appended to it;
  *  - otherwise a new entry is created in today's session (created if
  *    needed) from the last set of the most recent entry.
- * Resolves to { status: 'saved', setNumber, summary } or { status: 'nothing' }
+ * Resolves to { status: 'saved', setNumber, sessionId, summary } or { status: 'nothing' }
  * when there is no previous set to repeat.
  */
 async function ftRepeatLastSet(exerciseId) {
@@ -108,7 +111,9 @@ async function ftRepeatLastSet(exerciseId) {
     var values = Object.assign({}, lastSet.values)
 
     var setNumber
+    var sessionId
     if (todayEntry && exercise.usesSets) {
+      sessionId = todayEntry.sessionId
       setNumber = todayEntry.sets.length + 1
       todayEntry.sets.push({ setNumber: setNumber, values: values })
       todayEntry.updatedAt = now
@@ -130,6 +135,7 @@ async function ftRepeatLastSet(exerciseId) {
         await ftRequest(sessions.add(session))
       }
       setNumber = 1
+      sessionId = session.id
       await ftRequest(
         entries.add({
           id: crypto.randomUUID(),
@@ -144,7 +150,7 @@ async function ftRepeatLastSet(exerciseId) {
       )
     }
 
-    return { status: 'saved', setNumber: setNumber, summary: ftFormatValues(exercise.statDefs, values) }
+    return { status: 'saved', setNumber: setNumber, sessionId: sessionId, summary: ftFormatValues(exercise.statDefs, values) }
   } finally {
     db.close()
   }
@@ -244,14 +250,33 @@ function ftStartTimer(data, durationMs) {
     ftShowNotification(Object.assign({}, base, { timerEndsAt: endsAt }), 'Resting until ' + ftTimeLabel(endsAt)).catch(ftLogError)
     timer.timeoutId = setTimeout(function () {
       if (ftTimer === timer) ftTimer = null
-      ftShowNotification(base, 'Rest over — time for the next set.', {
-        silent: false,
-        renotify: true,
-        vibrate: [200, 100, 200],
-      })
-        .catch(ftLogError)
-        .then(resolve)
+      ftTimerDone(base).catch(ftLogError).then(resolve)
     }, duration)
+  })
+}
+
+/** Rest finished: put the normal notification back (silently), then raise a
+ *  brand-new alert notification. A new notification — not an update of the
+ *  existing one — is what reliably makes Android play its sound and vibrate. */
+async function ftTimerDone(base) {
+  await ftShowNotification(base, base.body || '')
+  await self.registration.showNotification(base.exerciseName, {
+    body: 'Rest over — time for the next set.',
+    tag: FT_DONE_TAG,
+    silent: false,
+    vibrate: [200, 100, 200],
+    requireInteraction: false,
+    icon: 'icons/icon-192.png',
+    badge: 'icons/icon-192.png',
+    data: Object.assign({}, base, { kind: 'workout-timer-done' }),
+  })
+  await ftBroadcast({ type: 'ft-timer-done' })
+  await new Promise(function (resolve) {
+    setTimeout(resolve, FT_DONE_VISIBLE_MS)
+  })
+  var alerts = await self.registration.getNotifications({ tag: FT_DONE_TAG })
+  alerts.forEach(function (n) {
+    n.close()
   })
 }
 
@@ -275,7 +300,7 @@ async function ftHandleRepeat(data) {
     if (result.status === 'saved') {
       var saved = 'Set ' + result.setNumber + ' saved: ' + result.summary
       await ftShowNotification(Object.assign({}, data, { body: saved }), saved)
-      await ftBroadcast({ type: 'ft-data-changed' })
+      await ftBroadcast({ type: 'ft-data-changed', sessionId: result.sessionId })
     } else {
       await ftShowNotification(data, 'Nothing to repeat yet — tap this notification to log your first set.')
     }
@@ -285,20 +310,40 @@ async function ftHandleRepeat(data) {
   }
 }
 
+/** Brings the app to the front. If it is already open it is left on whatever
+ *  screen the user is on; if not, it opens on the Add Entry form for the
+ *  exercise. */
 async function ftOpenApp(data) {
-  var windows = await ftBroadcast({ type: 'ft-open-exercise', exerciseId: data.exerciseId })
-  var visible = windows.find(function (client) {
+  var windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+  var target = windows.find(function (client) {
     return 'focus' in client
   })
-  if (visible) {
-    await visible.focus()
+  if (target) {
+    await target.focus()
     return
   }
   await self.clients.openWindow('./#/log?exercise=' + encodeURIComponent(data.exerciseId))
 }
 
+/** Android removes a notification when it is tapped, so put it back —
+ *  still counting down if a rest timer is running. */
+function ftReshow(data) {
+  var remaining = ftRemainingMs(data)
+  if (remaining > 0) {
+    var endsAt = ftTimer ? ftTimer.endsAt : data.timerEndsAt
+    return ftShowNotification(Object.assign({}, data, { timerEndsAt: endsAt }), 'Resting until ' + ftTimeLabel(endsAt))
+  }
+  var idle = ftIdleData(data)
+  return ftShowNotification(idle, idle.body || '')
+}
+
 self.addEventListener('notificationclick', function (event) {
   var data = event.notification.data
+  if (data && data.kind === 'workout-timer-done') {
+    event.notification.close()
+    event.waitUntil(ftOpenApp(data))
+    return
+  }
   if (!data || data.kind !== 'workout') return
 
   // Action buttons keep the notification: it is re-shown with the result.
@@ -318,8 +363,8 @@ self.addEventListener('notificationclick', function (event) {
     event.waitUntil(ftStopTimer(data))
     return
   }
-  event.notification.close()
-  event.waitUntil(ftOpenApp(data))
+  // Tap on the notification itself: open the app, and keep the notification.
+  event.waitUntil(ftOpenApp(data).then(function () { return ftReshow(data) }).catch(ftLogError))
 })
 
 // Exposed so the unit tests can exercise the data logic directly.

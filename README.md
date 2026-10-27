@@ -124,8 +124,15 @@ the background:
   notification sound and vibrates. The notification shows the time the rest
   ends; a countdown can't tick inside a web notification. Timers are capped at
   about 5 minutes per run (a browser limit for service workers).
-- Tapping the notification opens the Add Entry form for that exercise,
-  pre-filled with your last values.
+- When the rest ends, a fresh alert notification plays the phone's sound and
+  vibrates (and clears itself after a few seconds); if the app is on screen it
+  also plays a short beep.
+- Tapping the notification brings the app to the front, leaving it on the
+  screen it was on (or opening the exercise's Add Entry form if the app was
+  closed). The notification stays in place.
+- A set saved with **Repeat last set** shows up in the app as soon as you
+  return to it: an open Add Entry form is replaced by the workout it landed in;
+  edit forms are never touched.
 
 It is a local notification: nothing is sent to any server. Typing values
 inside the notification is not possible on the web, which is why the buttons
